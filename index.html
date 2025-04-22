@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Dijkstra vs Pohl's Algorithm</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #252525;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .initial-box {
+            background: transparent;
+            padding: 2rem;
+            border: 2px solid white;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            color: white;
+        }
+
+        .visualize-container,
+        .description-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #252525;
+            flex-direction: column;
+        }
+
+        .header {
+            height: 10%;
+            background: #3d3d3d;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            flex-wrap: wrap;
+            color: white;
+        }
+
+        .header input[type="number"] {
+            width: 80px;
+            padding: 0.5rem;
+            margin: 0 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .header input[type="text"] {
+            flex-grow: 1;
+            padding: 0.5rem;
+            margin: 0 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .header input[type="range"] {
+            width: 100px;
+            margin: 0 0.5rem;
+        }
+
+        .header button {
+            padding: 0.5rem 1rem;
+            color: #ff0aa5;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 0 0.5rem;
+        }
+
+        .header button:hover {
+            background: #ff0aa5;
+            color: white;
+        }
+
+        #network {
+            width: 100%;
+            height: 70%;
+        }
+
+        .log-panel {
+            width: 100%;
+            height: 20%;
+            background: #1e1e1e;
+            color: #e0e0e0;
+            padding: 0.8rem;
+            overflow-y: auto;
+            border-top: 1px solid #444444;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .log-panel p {
+            margin: 0.15rem 0;
+            line-height: 1.4;
+        }
+
+        .log-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .log-panel::-webkit-scrollbar-track {
+            background: #2a2a2a;
+        }
+
+        .log-panel::-webkit-scrollbar-thumb {
+            background: #666666;
+            border-radius: 3px;
+        }
+
+        .initial-box input[type="number"] {
+            padding: 0.5rem;
+            margin: 0.5rem;
+            background-color: transparent;
+            color: #ff0aa5;
+            border: 2px solid #ff0aa5;
+            border-radius: 6px;
+            width: 100px;
+        }
+
+        .initial-box button {
+            padding: 0.5rem 1rem;
+            background: transparent;
+            color: #ff0aa5;
+            border: 2px solid #ff0aa5;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 0.5rem;
+            transition: 0.5s;
+        }
+
+        .initial-box button:hover {
+            background: #ff0aa5;
+            color: white;
+            font-weight: 650;
+            transform: scale(1.1);
+            transition: 0.5s;
+            box-shadow: 0px 0px 10px #ff0aa5;
+        }
+
+        .visualize-button {
+            display: none;
+        }
+
+        .description-content {
+            padding: 2rem;
+            color: white;
+            overflow-y: auto;
+            height: 90%;
+        }
+
+        .description-content h2 {
+            color: #ff0aa5;
+        }
+
+        .description-content h3 {
+            color: #ffffff;
+        }
+
+        .description-content p,
+        .description-content li {
+            line-height: 1.6;
+        }
+
+        .description-header {
+            height: 10%;
+            background: #3d3d3d;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="initial-box">
+        <h2>Graph Generator</h2>
+        <label>Number of Vertices (max 10):</label>
+        <input type="number" id="vertexCount" min="1" max="10" value="10">
+        <button onclick="generateGraph()">Generate Graph</button>
+        <button class="visualize-button" onclick="showVisualize()">Visualize</button>
+        <button onclick="showDescriptions()">View Algorithm Descriptions</button>
+    </div>
+    <div class="visualize-container" id="visualizeContainer">
+        <div class="header">
+            <div>
+                <label>Start Vertex:</label>
+                <input type="number" id="startVertex" min="0" value="0">
+            </div>
+            <div>
+                <label>Destination Vertex:</label>
+                <input type="number" id="destVertex" min="0" value="9">
+            </div>
+            <div>
+                <label>Path:</label>
+                <input type="text" id="pathDisplay" readonly>
+            </div>
+            <div>
+                <label>Node Spacing: <span id="spacingValue">150</span></label>
+                <input type="range" id="spacingSlider" min="50" max="300" value="150">
+            </div>
+            <button onclick="runDijkstra()">Run Dijkstra</button>
+            <button onclick="runPohlsAlgorithm()">Run Pohl's Algorithm</button>
+            <button onclick="clearGraph()">Clear Graph</button>
+            <button onclick="clearLog()">Clear Log</button>
+        </div>
+        <div id="network"></div>
+        <div class="log-panel" id="logPanel"></div>
+    </div>
+    <div class="description-container" id="descriptionContainer">
+        <div class="description-header">
+            <h2>Algorithm Descriptions</h2>
+            <button onclick="hideDescriptions()">Back</button>
+        </div>
+        <div class="description-content">
+            <h2>Dijkstra’s Algorithm</h2>
+            <p>Dijkstra’s Algorithm finds the shortest path from a start vertex to a destination vertex in a weighted
+                graph with non-negative edge weights. It uses a priority queue to explore nodes in order of increasing
+                distance from the start. In this application, it traces the shortest path in a complete, undirected
+                graph, with execution details logged in the panel below the graph.</p>
+            <h3>Step-by-Step Process</h3>
+            <ol>
+                <li><strong>Initialize</strong>: Set distance to start node as 0, others to infinity. Initialize parent
+                    array and priority queue with start node.</li>
+                <li><strong>Process Nodes</strong>: Extract node with smallest distance from queue. For each neighbor,
+                    compute new distance; update if smaller, set parent, and add to queue.</li>
+                <li><strong>Stop</strong>: When destination is reached, reconstruct path using parent array.</li>
+                <li><strong>Visualize</strong>: Visited nodes turn yellow; shortest path edges turn red.</li>
+            </ol>
+            <h3>Complexity</h3>
+            <p>Time: O(V²) with array-based priority queue for V vertices. Space: O(V).</p>
+
+            <h2>Pohl’s Algorithm (Bidirectional Dijkstra)</h2>
+            <p>Pohl’s Algorithm optimizes Dijkstra’s by searching forward from the start and backward from the
+                destination simultaneously, meeting at an intermediate node. It reduces explored nodes, with execution
+                traced in the log panel.</p>
+            <h3>Step-by-Step Process</h3>
+            <ol>
+                <li><strong>Initialize</strong>: Set forward distance for start and backward distance for destination to
+                    0, others to infinity. Use two priority queues and parent arrays.</li>
+                <li><strong>Process Nodes</strong>: Alternate forward and backward searches, updating distances and
+                    parents until a node is visited by both searches (meeting node).</li>
+                <li><strong>Construct Path</strong>: Combine forward path to meeting node and backward path from
+                    destination.</li>
+                <li><strong>Visualize</strong>: Forward nodes turn yellow, backward nodes turn orange; shortest path
+                    edges turn red.</li>
+            </ol>
+            <h3>Complexity</h3>
+            <p>Time: O(V²) worst-case. Space: O(V).</p>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+    <script>
+        let currentGraph = null;
+        let network = null;
+        let nodesDataSet = null;
+        let edgesDataSet = null;
+        let stepCounter = 0;
+        const INF = Infinity;
+
+        function generateGraph() {
+            const V = parseInt(document.getElementById("vertexCount").value);
+            if (V < 1 || V > 10 || isNaN(V)) {
+                alert("Please enter a valid number of vertices (1-10).");
+                return;
+            }
+
+            currentGraph = Array.from({ length: V }, () => []);
+            for (let u = 0; u < V; u++) {
+                for (let v = u + 1; v < V; v++) {
+                    const weight = Math.floor(Math.random() * 10) + 1;
+                    currentGraph[u].push([v, weight]);
+                    currentGraph[v].push([u, weight]);
+                }
+            }
+
+            document.querySelector(".visualize-button").style.display = "block";
+            document.getElementById("destVertex").value = V - 1;
+        }
+
+        function showVisualize() {
+            if (!currentGraph) {
+                alert("No graph generated. Please click 'Generate Graph' first.");
+                return;
+            }
+
+            document.querySelector(".initial-box").style.display = "none";
+            document.getElementById("visualizeContainer").style.display = "flex";
+            visualizeGraph();
+
+            const spacingSlider = document.getElementById("spacingSlider");
+            const spacingValue = document.getElementById("spacingValue");
+            spacingSlider.addEventListener("input", () => {
+                spacingValue.textContent = spacingSlider.value;
+                visualizeGraph();
+            });
+        }
+
+        function showDescriptions() {
+            document.querySelector(".initial-box").style.display = "none";
+            document.getElementById("descriptionContainer").style.display = "flex";
+        }
+
+        function hideDescriptions() {
+            document.getElementById("descriptionContainer").style.display = "none";
+            document.querySelector(".initial-box").style.display = "block";
+        }
+
+        function logMessage(message) {
+            const logPanel = document.getElementById("logPanel");
+            const p = document.createElement("p");
+            p.textContent = `${stepCounter++}: ${message}`;
+            logPanel.appendChild(p);
+            logPanel.scrollTop = logPanel.scrollHeight;
+        }
+
+        function clearLog() {
+            const logPanel = document.getElementById("logPanel");
+            logPanel.innerHTML = "";
+            stepCounter = 0;
+        }
+
+        function visualizeGraph() {
+            const V = currentGraph.length;
+            const src = parseInt(document.getElementById("startVertex").value);
+            const dest = parseInt(document.getElementById("destVertex").value);
+            const nodes = [];
+            const edges = [];
+            const springLength = parseInt(document.getElementById("spacingSlider").value) || 150;
+
+            for (let i = 0; i < V; i++) {
+                const color = i === src ? '#00FF00' : i === dest ? '#FF0000' : '#97C2FC';
+                nodes.push({ id: i, label: `${i}`, color });
+            }
+
+            for (let u = 0; u < V; u++) {
+                for (const [v, weight] of currentGraph[u]) {
+                    if (u < v) {
+                        edges.push({
+                            id: `${u}-${v}`,
+                            from: u,
+                            to: v,
+                            label: `${weight}`,
+                            color: { color: "#2B7CE9" }
+                        });
+                    }
+                }
+            }
+
+            const container = document.getElementById("network");
+            nodesDataSet = new vis.DataSet(nodes);
+            edgesDataSet = new vis.DataSet(edges);
+            const data = { nodes: nodesDataSet, edges: edgesDataSet };
+            const options = {
+                nodes: {
+                    shape: "circle",
+                    size: 20,
+                    font: { size: 12, color: "#ffffff" },
+                    borderWidth: 2,
+                    shapeProperties: { useBorderWithImage: true }
+                },
+                edges: { font: { size: 10 }, width: 2 },
+                physics: {
+                    enabled: true,
+                    barnesHut: {
+                        gravitationalConstant: -1000,
+                        centralGravity: 0.3,
+                        springLength: springLength
+                    }
+                }
+            };
+            network = new vis.Network(container, data, options);
+        }
+
+        function validateVertices() {
+            const V = currentGraph.length;
+            const src = parseInt(document.getElementById("startVertex").value);
+            const dest = parseInt(document.getElementById("destVertex").value);
+            if (isNaN(src) || src < 0 || src >= V) {
+                alert(`Start vertex must be between 0 and ${V - 1}.`);
+                return false;
+            }
+            if (isNaN(dest) || dest < 0 || dest >= V) {
+                alert(`Destination vertex must be between 0 and ${V - 1}.`);
+                return false;
+            }
+            if (src === dest) {
+                alert("Start and destination vertices cannot be the same.");
+                return false;
+            }
+            return { src, dest };
+        }
+
+        async function animateVisitedNodes(visited, color = '#FFFF00', delay = 100) {
+            for (const nodeId of visited) {
+                if (nodesDataSet.get(nodeId).color !== '#00FF00' && nodesDataSet.get(nodeId).color !== '#FF0000') {
+                    nodesDataSet.update({ id: nodeId, color });
+                }
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+
+        function highlightPath(path) {
+            edgesDataSet.forEach(edge => {
+                edgesDataSet.update({ id: edge.id, color: { color: "#2B7CE9" } });
+            });
+            for (let i = 1; i < path.length; i++) {
+                const u = Math.min(path[i - 1], path[i]);
+                const v = Math.max(path[i - 1], path[i]);
+                edgesDataSet.update({ id: `${u}-${v}`, color: { color: "#FF0000" } });
+            }
+        }
+
+        function reconstructPath(parents, src, dest, direction = '') {
+            const path = [];
+            let current = dest;
+            logMessage(`${direction}Path: Trace from n${dest} to n${src}`);
+            while (current !== undefined) {
+                path.push(current);
+                logMessage(`${direction}Add n${current}, parent=n${parents[current] ?? '-'}`);
+                if (current === src) break;
+                current = parents[current];
+            }
+            const finalPath = path.reverse();
+            logMessage(`${direction}Path: ${finalPath.map(n => `n${n}`).join("->")}`);
+            return finalPath;
+        }
+
+        async function dijkstra(graph, src, dest) {
+            const V = graph.length;
+            const dist = Array(V).fill(INF);
+            const parent = Array(V).fill(undefined);
+            const visitedOrder = [];
+            dist[src] = 0;
+            const pq = [[0, src]];
+            logMessage(`Init: n${src} d=0`);
+
+            while (pq.length > 0) {
+                pq.sort((a, b) => a[0] - b[0]);
+                const [d, u] = pq.shift();
+                if (!visitedOrder.includes(u)) {
+                    visitedOrder.push(u);
+                    logMessage(`Ext: n${u} d=${d}`);
+                    if (u === dest) break;
+                    for (const [v, w] of graph[u]) {
+                        const newDist = dist[u] + w;
+                        if (newDist < dist[v]) {
+                            dist[v] = newDist;
+                            parent[v] = u;
+                            pq.push([dist[v], v]);
+                            logMessage(`Upd: n${v} d=${newDist} p=n${u}`);
+                            logMessage(`Q: [${pq.map(([d, n]) => `n${n}:${d}`).join(", ")}]`);
+                        }
+                    }
+                }
+            }
+
+            const path = reconstructPath(parent, src, dest);
+            logMessage(`Cost: ${dist[dest]}`);
+            return { cost: dist[dest], path, visited: visitedOrder };
+        }
+
+        async function runDijkstra() {
+            if (!currentGraph) {
+                alert("No graph generated. Please click 'Generate Graph' first.");
+                return;
+            }
+
+            const vertices = validateVertices();
+            if (!vertices) return;
+            const { src, dest } = vertices;
+
+            clearGraph();
+            clearLog();
+            stepCounter = 0;
+
+            const pathDisplay = document.getElementById("pathDisplay");
+            pathDisplay.value = "Processing...";
+
+            const startTime = performance.now();
+            const result = await dijkstra(currentGraph, src, dest);
+            const endTime = performance.now();
+            logMessage(`Time: ${(endTime - startTime).toFixed(2)} ms`);
+
+            await animateVisitedNodes(result.visited, '#FFFF00', 100);
+            highlightPath(result.path);
+            pathDisplay.value = result.path.join(" → ");
+
+            nodesDataSet.update([
+                { id: src, color: '#00FF00' },
+                { id: dest, color: '#FF0000' }
+            ]);
+        }
+
+        async function pohlsAlgorithm(graph, src, dest) {
+            const V = graph.length;
+            const distF = Array(V).fill(INF);
+            const distB = Array(V).fill(INF);
+            const parentF = Array(V).fill(undefined);
+            const parentB = Array(V).fill(undefined);
+            const visitedF = Array(V).fill(false);
+            const visitedB = Array(V).fill(false);
+            const visitOrderF = [], visitOrderB = [];
+
+            distF[src] = 0;
+            distB[dest] = 0;
+            const pqF = [[0, src]];
+            const pqB = [[0, dest]];
+            let meetingNode = -1;
+
+            logMessage(`F: Init n${src} d=0`);
+            logMessage(`B: Init n${dest} d=0`);
+
+            while (pqF.length || pqB.length) {
+                if (pqF.length) {
+                    pqF.sort((a, b) => a[0] - b[0]);
+                    const [dF, uF] = pqF.shift();
+                    if (!visitedF[uF]) {
+                        visitedF[uF] = true;
+                        visitOrderF.push(uF);
+                        logMessage(`F: Ext n${uF} d=${dF}`);
+                        if (visitedB[uF]) {
+                            meetingNode = uF;
+                            logMessage(`Meet n${uF} dF=${distF[uF]} dB=${distB[uF]}`);
+                            break;
+                        }
+                        for (const [v, w] of graph[uF]) {
+                            const newDist = distF[uF] + w;
+                            if (newDist < distF[v]) {
+                                distF[v] = newDist;
+                                parentF[v] = uF;
+                                pqF.push([distF[v], v]);
+                                logMessage(`F: Upd n${v} d=${newDist} p=n${uF}`);
+                                logMessage(`F: Q=[${pqF.map(([d, n]) => `n${n}:${d}`).join(", ")}]`);
+                            }
+                        }
+                    }
+                }
+
+                if (pqB.length) {
+                    pqB.sort((a, b) => a[0] - b[0]);
+                    const [dB, uB] = pqB.shift();
+                    if (!visitedB[uB]) {
+                        visitedB[uB] = true;
+                        visitOrderB.push(uB);
+                        logMessage(`B: Ext n${uB} d=${dB}`);
+                        if (visitedF[uB]) {
+                            meetingNode = uB;
+                            logMessage(`Meet n${uB} dF=${distF[uB]} dB=${distB[uB]}`);
+                            break;
+                        }
+                        for (const [v, w] of graph[uB]) {
+                            const newDist = distB[uB] + w;
+                            if (newDist < distB[v]) {
+                                distB[v] = newDist;
+                                parentB[v] = uB;
+                                pqB.push([distB[v], v]);
+                                logMessage(`B: Upd n${v} d=${newDist} p=n${uB}`);
+                                logMessage(`B: Q=[${pqB.map(([d, n]) => `n${n}:${d}`).join(", ")}]`);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (meetingNode === -1) {
+                logMessage("No path");
+                return { cost: INF, path: [], visitedF: visitOrderF, visitedB: visitOrderB };
+            }
+
+            const forwardPath = reconstructPath(parentF, src, meetingNode, 'F: ');
+            const backwardPath = reconstructPath(parentB, dest, meetingNode, 'B: ').reverse().slice(1);
+            const fullPath = forwardPath.concat(backwardPath);
+            logMessage(`Full: ${fullPath.map(n => `n${n}`).join("->")} c=${distF[meetingNode] + distB[meetingNode]}`);
+            return { cost: distF[meetingNode] + distB[meetingNode], path: fullPath, visitedF: visitOrderF, visitedB: visitOrderB };
+        }
+
+        async function runPohlsAlgorithm() {
+            if (!currentGraph) {
+                alert("No graph generated. Please click 'Generate Graph' first.");
+                return;
+            }
+
+            const vertices = validateVertices();
+            if (!vertices) return;
+            const { src, dest } = vertices;
+
+            clearGraph();
+            clearLog();
+            stepCounter = 0;
+
+            const pathDisplay = document.getElementById("pathDisplay");
+            pathDisplay.value = "Processing...";
+
+            const startTime = performance.now();
+            const result = await pohlsAlgorithm(currentGraph, src, dest);
+            const endTime = performance.now();
+            logMessage(`Time: ${(endTime - startTime).toFixed(2)} ms`);
+
+            const forwardPromise = animateVisitedNodes(result.visitedF, '#FFFF00', 100);
+            const backwardPromise = animateVisitedNodes(result.visitedB, '#FFA500', 100);
+            await Promise.all([forwardPromise, backwardPromise]);
+            highlightPath(result.path);
+            pathDisplay.value = result.path.join(" → ");
+
+            nodesDataSet.update([
+                { id: src, color: '#00FF00' },
+                { id: dest, color: '#FF0000' }
+            ]);
+        }
+
+        function clearGraph() {
+            const V = currentGraph.length;
+            const src = parseInt(document.getElementById("startVertex").value);
+            const dest = parseInt(document.getElementById("destVertex").value);
+            nodesDataSet.forEach(node => {
+                const color = node.id === src ? '#00FF00' : node.id === dest ? '#FF0000' : '#97C2FC';
+                nodesDataSet.update({ id: node.id, color });
+            });
+            edgesDataSet.forEach(edge => {
+                edgesDataSet.update({ id: edge.id, color: { color: "#2B7CE9" } });
+            });
+            document.getElementById("pathDisplay").value = "";
+        }
+    </script>
+</body>
+
+</html>
